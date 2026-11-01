@@ -1,11 +1,68 @@
-# Android phone microphone
+# AndroidMic
 
-Windows portable bundle using scrcpy 4.0. Extract the ZIP, enable Developer options and USB debugging on the phone, connect it by USB, unlock it, and approve the debugging prompt. Run AndroidMic.bat. Press Ctrl+C to stop the retry loop.
+Use an Android phone as a Windows microphone over USB with scrcpy. AndroidMic can start when Windows detects a phone connection, without keeping a microphone window open while you wait.
 
-For automatic startup, keep the extracted folder in a permanent location and run Install-AutoStart.bat once. At each Windows sign-in, AndroidMic opens a console and waits for an authorized device, then starts scrcpy. Reconnecting retries automatically. Run Remove-AutoStart.bat to remove the startup shortcut. The installer does not start the current session: run AndroidMic.bat once now if desired. Avoid running multiple copies. With multiple USB debugging devices connected, scrcpy requires a single USB device to be selected. The first authorization must still be approved on the phone.
+## Requirements
 
-Alternatively, Install-Phone-Trigger.ps1 registers an event-triggered task for the signed-in user. Enable the Windows DriverFrameworks-UserMode/Operational event log as administrator first (`wevtutil sl Microsoft-Windows-DriverFrameworks-UserMode/Operational /e:true`). The task checks for an authorized USB ADB device for 30 seconds after a driver arrival and runs scrcpy once; it exits when scrcpy stops. It depends on a driver-arrival event, which may not be emitted by every phone or USB mode. Other devices can also trigger the check. Run Remove-Phone-Trigger.ps1 to remove the task. Do not enable both startup methods.
+- Windows and an Android phone running Android 11 or newer.
+- A USB cable that supports data.
+- Developer options and **USB debugging** enabled on the phone.
+- [VB-CABLE](https://vb-audio.com/Cable/) if you want to select the audio as a microphone in Discord, OBS, or another app.
 
-scrcpy forwards microphone audio to a Windows playback device; it does not create a microphone input. For Discord or OBS, install VB-CABLE separately, route scrcpy's output to CABLE Input in Windows volume mixer, then select CABLE Output as the microphone. Do not set CABLE Input as your general default output unless intended. See https://vb-audio.com/Cable/ for installation.
+The repository includes scrcpy 4.0 and ADB; you do not need to install them separately. USB debugging must remain enabled while you use AndroidMic.
 
-The bundle includes the installed scrcpy Windows binaries and adb. Android 11 or newer is required for audio forwarding. USB debugging must remain enabled. If the connection drops, try another data cable or USB port. scrcpy source, license, and official releases: https://github.com/Genymobile/scrcpy
+## Set up on a Windows PC
+
+Repeat these steps on each PC where you want to use the phone.
+
+1. Download this repository using **Code → Download ZIP** on GitHub. Extract it to a permanent folder; the scheduled task refers to that folder.
+2. Connect and unlock the phone. When asked to allow USB debugging, select **Always allow from this computer** and tap **Allow**. Each PC must be authorized separately.
+3. Open **Command Prompt as administrator** and enable the Windows device event log:
+
+   ```cmd
+   wevtutil sl Microsoft-Windows-DriverFrameworks-UserMode/Operational /e:true
+   ```
+
+4. Open PowerShell in the extracted folder and register the task for your Windows account:
+
+   ```powershell
+   powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Install-Phone-Trigger.ps1
+   ```
+
+5. While signed in, unplug and reconnect the phone. Windows should start the microphone session automatically. It closes when scrcpy stops. On first connection, allow up to 30 seconds for ADB to detect the phone.
+
+The trigger depends on a Windows driver-arrival event. It worked with the Samsung phone used to test this project, but events can differ by PC, phone, or USB mode. Other device arrivals may also start a brief ADB check. If more than one USB debugging device is connected, scrcpy may require you to disconnect the others.
+
+## Use the phone in Discord or OBS
+
+scrcpy plays the phone's microphone audio through a Windows **output** device; it does not create a Windows microphone by itself.
+
+1. Install [VB-CABLE](https://vb-audio.com/Cable/) on the PC.
+2. Start an AndroidMic session, then open Windows **Settings → System → Sound → Volume mixer**. Set scrcpy's output device to **CABLE Input**.
+3. In Discord, OBS, or your other app, select **CABLE Output** as the microphone/input device.
+4. Speak into the phone and check the app's input meter. Avoid setting CABLE Input as the default output for all Windows audio unless you intend to route all of it into the cable.
+
+## Manual use
+
+Run `AndroidMic.bat` to wait for an authorized USB phone and retry after disconnects. Press **Ctrl+C** to stop it. This is separate from the event-triggered task; avoid running both at once.
+
+The older `Install-AutoStart.bat` starts a waiting console at Windows sign-in. Use `Remove-AutoStart.bat` to remove that shortcut. Do not enable both startup methods.
+
+## Remove the phone connection trigger
+
+In PowerShell, from the project folder, run:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Remove-Phone-Trigger.ps1
+```
+
+This removes the scheduled task; it does not disable the Windows event log or uninstall VB-CABLE.
+
+## Troubleshooting
+
+- **Phone not detected or unauthorized:** Unlock it, check USB debugging, accept the PC's authorization prompt, and try another data cable or USB port. Run `scrcpy\adb.exe devices -l` from the project folder; the phone should show `device`.
+- **No automatic start:** Confirm that the event log is enabled and the scheduled task is installed for the signed-in Windows user. Reconnect the phone and try another USB mode. Run `AndroidMic.bat` to test the connection manually.
+- **No sound in Discord or OBS:** Confirm scrcpy is routed to CABLE Input and the app uses CABLE Output. Check the app's input level and microphone permissions.
+- **Connection drops:** Try another data cable or USB port. The manual script retries; the event-triggered session exits and relies on a new arrival event to start again.
+
+scrcpy is an independent open-source project. See its [official repository](https://github.com/Genymobile/scrcpy) for source, license, and releases.
