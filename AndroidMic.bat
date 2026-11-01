@@ -20,7 +20,7 @@ echo [%date% %time%] Starting Android microphone...
 echo.
 
 "%~dp0scrcpy\adb.exe" -d wait-for-device
-"%~dp0scrcpy\scrcpy.exe" --select-usb --audio-source=mic-voice-communication --no-window --audio-buffer=100
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0Start-AndroidMic.ps1"
 
 echo.
 echo [%date% %time%] scrcpy stopped or device disconnected.

@@ -29,7 +29,14 @@ Repeat these steps on each PC where you want to use the phone.
    powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Install-Phone-Trigger.ps1
    ```
 
-5. While signed in, unplug and reconnect the phone. Windows should start the microphone session automatically. It closes when scrcpy stops. On first connection, allow up to 30 seconds for ADB to detect the phone.
+5. Check audio setup from the same folder:
+
+   ```powershell
+   powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Setup-Audio.ps1
+   ```
+
+   If VB-CABLE is missing, follow the displayed instructions to install the official driver, restart if requested, and run the check again.
+6. While signed in, unplug and reconnect the phone. Windows should start the microphone session automatically. It closes when scrcpy stops. On first connection, allow up to 30 seconds for ADB to detect the phone.
 
 The trigger depends on a Windows driver-arrival event. It worked with the Samsung phone used to test this project, but events can differ by PC, phone, or USB mode. Other device arrivals may also start a brief ADB check. If more than one USB debugging device is connected, scrcpy may require you to disconnect the others.
 
@@ -38,7 +45,7 @@ The trigger depends on a Windows driver-arrival event. It worked with the Samsun
 scrcpy plays the phone's microphone audio through a Windows **output** device; it does not create a Windows microphone by itself.
 
 1. Install [VB-CABLE](https://vb-audio.com/Cable/) on the PC.
-2. Start an AndroidMic session, then open Windows **Settings → System → Sound → Volume mixer**. Set scrcpy's output device to **CABLE Input**.
+2. Start an AndroidMic session. AndroidMic uses the bundled NirSoft SoundVolumeCommandLine utility to route that scrcpy process to an active VB-CABLE input without changing the system default output. If routing fails, open Windows **Settings → System → Sound → Volume mixer** and set scrcpy's output device to **CABLE Input** manually.
 3. In Discord, OBS, or your other app, select **CABLE Output** as the microphone/input device.
 4. Speak into the phone and check the app's input meter. Avoid setting CABLE Input as the default output for all Windows audio unless you intend to route all of it into the cable.
 
@@ -66,3 +73,5 @@ This removes the scheduled task; it does not disable the Windows event log or un
 - **Connection drops:** Try another data cable or USB port. The manual script retries; the event-triggered session exits and relies on a new arrival event to start again.
 
 scrcpy is an independent open-source project. See its [official repository](https://github.com/Genymobile/scrcpy) for source, license, and releases.
+
+The bundled [SoundVolumeCommandLine](https://www.nirsoft.net/utils/sound_volume_command_line.html) is freeware by Nir Sofer; its original package and license information are in `tools/svcl`.

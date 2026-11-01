@@ -8,5 +8,5 @@ for /l %%i in (1,1,30) do (
 )
 exit /b
 :connected
-scrcpy\scrcpy.exe --select-usb --audio-source=mic-voice-communication --no-window --audio-buffer=100 --require-audio
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0Start-AndroidMic.ps1"
 exit /b
